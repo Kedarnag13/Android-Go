@@ -26,15 +26,7 @@ func (r registrationController) Create(rw http.ResponseWriter, req *http.Request
 	if err != nil {
 		log.Fatal(err)
 	}
-	users, err := db.Exec("CREATE TABLE IF NOT EXISTS users (
-		id SERIAL,
-		firstname varchar(255),
-		lastname varchar(255),
-		email varchar(255),
-		password varchar(255),
-		password_confirmation varchar(255),
-		city varchar(255),
-		state varchar(255),
+	users, err := db.Exec("CREATE TABLE IF NOT EXISTS users (id SERIAL,firstname varchar(255),lastname varchar(255),email varchar(255),password varchar(255),password_confirmation varchar(255),city varchar(255),state varchar(255),
 		country varchar(255),
 		createdat timestamptz,
 		user_thumbnail varchar(2083),
