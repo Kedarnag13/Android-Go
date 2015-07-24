@@ -17,8 +17,13 @@ type User struct {
 	Status_message        string
 }
 
-type SignUpMessage struct {
+type SignUpSuccessMessage struct {
 	Success string
 	Message string
 	User    User
+}
+
+type SignUpErrorMessage struct {
+	Success string
+	Error   string
 }
