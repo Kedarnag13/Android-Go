@@ -9,7 +9,7 @@ import (
 
 func main() {
 	r := mux.NewRouter()
-	fmt.Println("Welcome to Android-Go")
+	r.HandleFunc("/sign_up", account.Registration.Create)
 	http.Handle("/", r)
 
 	// HTTP Listening Port
