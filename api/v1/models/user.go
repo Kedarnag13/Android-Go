@@ -11,8 +11,14 @@ type User struct {
 	State                 string `valid:"alphanum"`
 	Country               string `valid:"alphanum"`
 	User_thumbnail        string
-	Mobile_number         int    `valid:"numeric"`
+	Mobile_number         string `valid:"numeric"`
 	Devise_token          string `valid:"alphanum,required"`
 	Status                bool
 	Status_message        string
+}
+
+type SignUpMessage struct {
+	Success string
+	Message string
+	User    User
 }
