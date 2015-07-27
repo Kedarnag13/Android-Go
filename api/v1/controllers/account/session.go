@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"time"
 )
 
 type sessionController struct{}
@@ -23,7 +24,6 @@ func (s sessionController) Create(rw http.ResponseWriter, req *http.Request) {
 
 	body, err := ioutil.ReadAll(req.Body)
 	var u models.User
-	var ses models.Session
 	flag := 1
 
 	if err != nil {
@@ -119,7 +119,8 @@ func (s sessionController) Create(rw http.ResponseWriter, req *http.Request) {
 			if err != nil {
 				log.Fatal(err)
 			}
-			login_result, err := login_prepare.Exec(ses.StartTime, user_id, u.Devise_token)
+			start_time := time.Now()
+			login_result, err := login_prepare.Exec(start_time, user_id, u.Devise_token)
 			if err != nil || login_result == nil {
 				log.Fatal(err)
 			}

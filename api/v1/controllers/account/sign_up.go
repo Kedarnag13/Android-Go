@@ -1,16 +1,17 @@
 package account
 
 import (
-	"database/sql"
-	"encoding/json"
-	"github.com/asaskevich/govalidator"
-	"github.com/kedarnag13/Android-Go/api/v1/models"
-	_ "github.com/lib/pq"
-	"io/ioutil"
-	"log"
-	"net/http"
-	"os"
-	"regexp"
+"database/sql"
+"encoding/json"
+"github.com/asaskevich/govalidator"
+"github.com/kedarnag13/Android-Go/api/v1/models"
+_ "github.com/lib/pq"
+"io/ioutil"
+"log"
+"net/http"
+"os"
+"regexp"
+"time"
 )
 
 type registrationController struct{}
@@ -60,7 +61,7 @@ func (r registrationController) Create(rw http.ResponseWriter, req *http.Request
 		b, err := json.Marshal(models.SignUpErrorMessage{
 			Success: "false",
 			Error:   err.Error(),
-		})
+			})
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -72,7 +73,7 @@ func (r registrationController) Create(rw http.ResponseWriter, req *http.Request
 		b, err := json.Marshal(models.SignUpErrorMessage{
 			Success: "false",
 			Error:   "Passwords do not match",
-		})
+			})
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -92,7 +93,7 @@ func (r registrationController) Create(rw http.ResponseWriter, req *http.Request
 			b, err := json.Marshal(models.SignUpErrorMessage{
 				Success: "false",
 				Error:   "User already Exist",
-			})
+				})
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -102,6 +103,30 @@ func (r registrationController) Create(rw http.ResponseWriter, req *http.Request
 			goto sign_up_end
 		}
 		if flag == 1 {
+			get_login_details, err := db.Query("SELECT devise_token FROM sessions")
+			if err != nil {
+				log.Fatal(err)
+			}
+			for get_login_details.Next() {
+				var devise_token string
+				err := get_login_details.Scan(&devise_token)
+				if err != nil {
+					log.Fatal(err)
+				}
+				 if u.Devise_token == devise_token {
+					b, err := json.Marshal(models.LogInErrorMessage{
+						Success: "false",
+						Error:   "Another account exists on this devices",
+						})
+					if err != nil {
+						log.Fatal(err)
+					}
+					rw.Header().Set("Content-Type", "application/json")
+					rw.Write(b)
+					flag = 0
+					goto sign_up_end
+				}
+			}
 			var sign_up_query string = "insert into users (firstname, lastname, email, password, password_confirmation,city,state,country,user_thumbnail,mobile_number,devise_token,status,status_message) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)"
 			sign_up_prepare, err := db.Prepare(sign_up_query)
 			if err != nil {
@@ -111,12 +136,39 @@ func (r registrationController) Create(rw http.ResponseWriter, req *http.Request
 			if err != nil || sign_up_result == nil {
 				log.Fatal(err)
 			}
+			fetch_user_id, err := db.Query("SELECT id from users where mobile_number = $1",u.Mobile_number)
+			var user_id int
+			for fetch_user_id.Next() {
+				err = fetch_user_id.Scan(&user_id)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+			var insert_into_devise_query string = "insert into devices (devise_token,user_id) values ($1,$2)"
+			insert_into_devise_prepare, err := db.Prepare(insert_into_devise_query)
+			if err != nil {
+				log.Fatal(err)
+			}
+			insert_into_devise_result, err := insert_into_devise_prepare.Exec(u.Devise_token, user_id)
+			if err != nil || insert_into_devise_result == nil {
+				log.Fatal(err)
+			}
+			start_time := time.Now()
+			var login_query string = "insert into sessions (start_time,user_id,devise_token) values ($1,$2,$3)"
+			login_prepare, err := db.Prepare(login_query)
+			if err != nil {
+				log.Fatal(err)
+			}
+			login_result, err := login_prepare.Exec(start_time, user_id, u.Devise_token)
+			if err != nil || login_result == nil {
+				log.Fatal(err)
+			}
 			user := models.User{}
 			b, err := json.Marshal(models.SignUpSuccessMessage{
 				Success: "true",
 				Message: "User created Successfully!",
 				User:    user,
-			})
+				})
 
 			if err != nil {
 				log.Fatal(err)
@@ -128,5 +180,5 @@ func (r registrationController) Create(rw http.ResponseWriter, req *http.Request
 			goto sign_up_end
 		}
 	}
-sign_up_end:
+	sign_up_end:
 }
