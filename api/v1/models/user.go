@@ -54,3 +54,14 @@ type LogInErrorMessage struct {
 	Success string
 	Error   string
 }
+
+type LogOutSuccessMessage struct {
+	Success string
+	Message string
+	User    User
+}
+
+type LogOutErrorMessage struct {
+	Success string
+	Error   string
+}
