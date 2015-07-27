@@ -103,6 +103,30 @@ func (r registrationController) Create(rw http.ResponseWriter, req *http.Request
 			goto sign_up_end
 		}
 		if flag == 1 {
+			get_login_details, err := db.Query("SELECT devise_token FROM sessions")
+			if err != nil {
+				log.Fatal(err)
+			}
+			for get_login_details.Next() {
+				var devise_token string
+				err := get_login_details.Scan(&devise_token)
+				if err != nil {
+					log.Fatal(err)
+				}
+				 if u.Devise_token == devise_token {
+					b, err := json.Marshal(models.LogInErrorMessage{
+						Success: "false",
+						Error:   "Another account exists on this devices",
+						})
+					if err != nil {
+						log.Fatal(err)
+					}
+					rw.Header().Set("Content-Type", "application/json")
+					rw.Write(b)
+					flag = 0
+					goto sign_up_end
+				}
+			}
 			var sign_up_query string = "insert into users (firstname, lastname, email, password, password_confirmation,city,state,country,user_thumbnail,mobile_number,devise_token,status,status_message) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)"
 			sign_up_prepare, err := db.Prepare(sign_up_query)
 			if err != nil {
