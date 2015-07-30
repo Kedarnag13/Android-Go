@@ -1,7 +1,9 @@
 package users
 
 import (
-	"github.com/sfreiberg/gotwilio"
+	"fmt"
+	"github.com/njern/gonexmo"
+	"log"
 	"net/http"
 )
 
@@ -10,12 +12,28 @@ type messageController struct{}
 var Message messageController
 
 func (m messageController) Send(rw http.ResponseWriter, req *http.Request) {
-	accountSid := "AC62e6cfa0a301115e75e91cd6fb176e5f"
-	authToken := "d25a1dd728cec4edc7d1b1e34d9b04b6"
-	twilio := gotwilio.NewTwilioClient(accountSid, authToken)
+	nexmo_client, _ := nexmo.NewClientFromAPI("4fc94b4e", "eb628653")
 
-	from := "+14805683241"
-	to := "+917022665448"
-	message := "Welcome to Android-Go."
-	twilio.SendSMS(from, to, message, "", "")
+	// Test if it works by retrieving your account balance
+	balance, err := nexmo_client.Account.GetBalance()
+	if err != nil || balance == 0.0 {
+		log.Fatal(err)
+	}
+	// Send an SMS
+	// See https://docs.nexmo.com/index.php/sms-api/send-message for details.
+	smsMsg := &nexmo.SMSMessage{
+		From:     "+919916854300",
+		To:       "+917022665448",
+		Body:     []byte("Welcome to Android-Go"),
+		Type:     nexmo.WAPPush,
+		Title:    "Hello World",
+		URL:      "http://www.google.com",
+		Validity: 1000,
+	}
+
+	messageResponse, err := nexmo_client.SMS.Send(smsMsg)
+	if err != nil || messageResponse == nil {
+		log.Fatal(err)
+	}
+	fmt.Println(messageResponse)
 }
