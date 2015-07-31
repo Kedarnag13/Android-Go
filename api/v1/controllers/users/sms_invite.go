@@ -5,6 +5,8 @@ import (
 	"github.com/njern/gonexmo"
 	"log"
 	"net/http"
+	"strconv"
+	"time"
 )
 
 type messageController struct{}
@@ -22,13 +24,12 @@ func (m messageController) Send(rw http.ResponseWriter, req *http.Request) {
 	// Send an SMS
 	// See https://docs.nexmo.com/index.php/sms-api/send-message for details.
 	smsMsg := &nexmo.SMSMessage{
-		From:     "+919916854300",
-		To:       "+917022665448",
-		Body:     []byte("Welcome to Android-Go"),
-		Type:     nexmo.WAPPush,
-		Title:    "Hello World",
-		URL:      "http://www.google.com",
-		Validity: 1000,
+		From:            "+919916854300",
+		To:              "+917022665448",
+		Type:            nexmo.Text,
+		Text:            "Hello, Welcome to Android-Go. Please click on the following link to download the application. " + "http://google.com",
+		ClientReference: "gonexmo-test " + strconv.FormatInt(time.Now().Unix(), 10),
+		Class:           nexmo.Flash,
 	}
 
 	messageResponse, err := nexmo_client.SMS.Send(smsMsg)
